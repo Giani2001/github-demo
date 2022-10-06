@@ -1,0 +1,94 @@
+import numpy as np
+import pandas as pd
+import sklearn as sk
+import matplotlib.pyplot as plt
+from sklearn import preprocessing
+from sklearn.metrics import f1_score
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+import os
+import cv2
+import glob
+
+from PIL import Image
+import math
+from data import Data
+#take the path of the folder where the input is saved
+DATA_DIR="C:\\Users\\Geani\\Desktop\\date"
+
+test_path=os.path.join(DATA_DIR,"test.txt")
+
+train_validation_data=os.path.join(DATA_DIR,"train+validation")
+
+#take images from test folde
+test_data=os.path.join(DATA_DIR,'test')
+
+train_path=os.path.join(DATA_DIR,'train.txt')
+
+validation_path=os.path.join(DATA_DIR,'validation.txt')
+
+#take images from train_validation folder
+train_validation_file=glob.glob(train_validation_data+"\\*.png")
+#take images from test folder
+test_file=glob.glob(test_data+"\\*.png")
+#take the photo id from test.txt
+test_id=[]
+test_files=pd.read_csv(test_path)
+test_id=test_files.iloc[:].values
+test_id=np.array(test_id)
+
+test_id=test_id.flatten()
+#take the photos in pixel format from train.txt
+train_id=[]
+train_label=[]
+train_files=pd.read_csv(train_path)
+
+train_id=train_files.iloc[:,0].values
+train_label=train_files.iloc[:,1].values
+train_id=np.array(train_id)
+train_label=np.array(train_label)
+#take the photos in pixel format from  validation.txt
+validation_id=[]
+validation_label=[]
+validation_files=pd.read_csv(validation_path)
+validation_id=validation_files.iloc[:,0].values
+validation_label=validation_files.iloc[:,1].values
+validation_label=np.array(validation_label)
+
+#create the numpy array of images in pizel for the training data
+train_vector=[]
+for i in range(0,len(train_id)):
+  for file in train_validation_file:
+    if train_id[i] in file:
+        img = Image.open(file)
+        train_vector.append(np.array(img))
+
+train_vector=np.array(train_vector,dtype=np.float64)
+#create the numpy array of images in pizel for the test data
+test_vector=[]
+for i in range(0,len(test_id)):
+  for file in test_file:
+    if test_id[i] in file:
+        img = Image.open(file)
+        test_vector.append(np.array(img))
+test_vector=np.array(test_vector,dtype=np.float64)
+#create the numpy array of images in pizel for the validation data
+validation_vector=[]
+for i in range(0,len(validation_id)):
+  for file in train_validation_file:
+    if train_id[i] in file:
+        img = Image.open(file)
+        validation_vector.append(np.array(img))
+validation_vector=np.array(validation_vector,dtype=np.float64)
+
+
+scaler = preprocessing.StandardScaler()
+scaler.fit(train_vector.reshape(1,-1))
+print(f"Data media: {scaler.mean_}")
+print(f"Standard deviation: {scaler.scale_}")
+
+scaled_x_train = scaler.transform(train_vector.reshape(1,-1))
+scaled_x_test = scaler.transform(train_label.reshape(1,-1))
+
+print(f"Datele de antrenare standardizate sunt:\n\n {scaled_x_train}")
+print(f"\nDatele de testare standardizate sunt:\n\n {scaled_x_test}")
